@@ -1,50 +1,38 @@
 import express from "express";
-import cors from "cors"
-import Welcome from "./controllers/welcome.js";
-
-
-import dotenv from "dotenv"
-
 import mongoose from "mongoose";
-import signup from './routes/register.js'
-import signin from './routes/signin.js'
+import cors from "cors";
+import dotenv from "dotenv";
+import routes from "./routes/index.js";
+
+// Load environment variables
+dotenv.config();
+
+// Create Express app
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// Middleware
+app.use(cors({
+  origin: '*', // Allow all origins
+  credentials: true,
+}));
+app.use(express.json());
+
+// Connect to MongoDB (MongoDB Atlas for free cloud-hosted DB)
+const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/mentorship';
+mongoose.connect(mongoURI)
+  .then(() => console.log('Connected to MongoDB'))
+  .catch(err => console.error('MongoDB connection error:', err));
+
+// Routes
+app.use("/api", routes);
 
 
+// Home route
+app.get("/", (req, res) => {
+  res.send("Mentorship Platform API is running");
+});
 
-const app=express();
-app.use(cors())
-
-
-
-
-app.get("/api/v1",Welcome)
-
-
-
-app.use("/api/v1/signup",signup)
-app.use("/api/v1",signin)
-
-dotenv.config()
-
-const connectTomongoDb=()=>{
-    const mongoURI=process.env.MONGO_URI;
-    mongoose.connect(mongoURI, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true
-    })
-    
-    .then(()=>{
-        console.log("mongodb connected")
-    })
-    .catch((err)=>{
-        console.error("failed to connect to mongodb",err);
-    })
-}
-
-
-
-const port=5300;
-app.listen(port,()=>{
-    console.log("your server has been started "+port);
-    connectTomongoDb()
-})
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
