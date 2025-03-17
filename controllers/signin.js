@@ -42,7 +42,7 @@ const signInController = async (req, res) => {
     // Send response with token in a cookie
     return res.status(200).cookie("token", token, options).json({
       message: "Login successful",
-      accountType, // Correct reference
+      accountType, 
       token,
       user,
     });

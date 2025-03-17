@@ -27,8 +27,8 @@ export const requestPasswordReset = async (req, res) => {
         const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
-                user: process.env.EMAIL_USERNAME || 'munyeshurimanzi@gmail.com',
-                pass: process.env.EMAIL_PASSWORD || 'sshp qtgs kuub udvk'
+                user: process.env.EMAIL_USERNAME || 'mukarwemaalice@gmail.com',
+                pass: process.env.EMAIL_PASSWORD || 'ciys tggj smri znso'
             }
         });
 
@@ -38,7 +38,7 @@ export const requestPasswordReset = async (req, res) => {
         // Email message
         const mailOptions = {
             to: user.email,
-            from: process.env.EMAIL_USERNAME || 'your-email@gmail.com',
+            from: process.env.EMAIL_USERNAME || 'mukarwemaalice@gmail.com',
             subject: 'Password Reset',
             text: `You are receiving this because you (or someone else) requested a password reset for your account.\n\n
                    Please click on the following link, or paste it into your browser to complete the process:\n\n
