@@ -31,7 +31,7 @@ app.use(cors({
 app.use(express.json());
 
 // Connect to MongoDB (MongoDB Atlas for cloud DB)
-const mongoURI = process.env.MONGODB_URI;
+const mongoURI = process.env.MONGODB_URI ||"mongodb+srv://munyeshuri:Munyeshuri1@cluster0.uisjoiq.mongodb.net/unlock?retryWrites=true&w=majority";
 
 mongoose.connect(mongoURI)
   .then(() => {
