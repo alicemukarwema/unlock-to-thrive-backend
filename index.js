@@ -31,7 +31,7 @@ app.use(cors({
 app.use(express.json());
 
 // Connect to MongoDB (MongoDB Atlas for cloud DB)
-const mongoURI = process.env.MONGODB_URI || "mongodb+srv://amukarwema:amukarwema@cluster0.qto0s.mongodb.net/yourDatabaseName?retryWrites=true&w=majority&appName=unlock-to-thrive";
+const mongoURI = process.env.MONGODB_URI;
 
 mongoose.connect(mongoURI)
   .then(() => {
