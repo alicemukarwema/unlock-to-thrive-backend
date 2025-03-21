@@ -31,10 +31,21 @@ app.use(cors({
 app.use(express.json());
 
 // Connect to MongoDB (MongoDB Atlas for cloud DB)
-const mongoURI = process.env.MONGODB_URI || "mongodb+srv://amukarwema:amukarwema@cluster0.qto0s.mongodb.net/?retryWrites=true&w=majority&appName=unlock-to-thrive";
+const mongoURI = process.env.MONGODB_URI ||"mongodb+srv://munyeshuri:Munyeshuri1@cluster0.uisjoiq.mongodb.net/unlock?retryWrites=true&w=majority";
+
 mongoose.connect(mongoURI)
-  .then(() => console.log("Connected to MongoDB"))
-  .catch(err => console.error("MongoDB connection error:", err));
+  .then(() => {
+    console.log("Connected to MongoDB");
+    // Start the server after MongoDB connection is established
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  })
+  .catch(err => {
+    console.error("MongoDB connection error:", err.message);
+    // Optionally exit the process if DB connection fails
+    process.exit(1);
+  });
 
 // Routes
 app.use("/api", routes);
@@ -42,9 +53,4 @@ app.use("/api", routes);
 // Home route
 app.get("/", (req, res) => {
   res.send("Mentorship Platform API is running");
-});
-
-// Start Server
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
 });
