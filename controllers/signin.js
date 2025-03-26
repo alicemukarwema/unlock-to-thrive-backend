@@ -27,6 +27,7 @@ const signInController = async (req, res) => {
     const token = jwt.sign({ id: check._id, accountType }, "teckcode", { expiresIn: "3d" });
 
     const user = {
+      id: check._id,
       accountType,
       email: check.email,
       token,
@@ -42,6 +43,7 @@ const signInController = async (req, res) => {
     // Send response with token in a cookie
     return res.status(200).cookie("token", token, options).json({
       message: "Login successful",
+      id: check._id, 
       accountType, 
       token,
       user,
@@ -54,5 +56,6 @@ const signInController = async (req, res) => {
     });
   }
 };
+
 
 export default signInController;

@@ -1,7 +1,7 @@
 import signup from "../models/register.js";
 import bcrypt from "bcrypt";
 
-const register = async (req, res) => {
+export const register = async (req, res) => {
     try {
         const data = req.body;
         
@@ -73,5 +73,23 @@ const register = async (req, res) => {
         });
     }
 };
+export const getAllMentors = async (req, res) => {
+    try {
+        // Fetch all users with accountType 'mentor'
+        const mentors = await signup.find({ accountType: "mentor" }).select("-password");
+        
+        return res.status(200).json({
+            message: "Mentors retrieved successfully",
+            error: null,
+            data: mentors
+        });
 
-export default register;
+    } catch (err) {
+        console.log("Error fetching mentors:", err);
+        return res.status(500).json({
+            message: "Failed to fetch mentors",
+            error: err.message
+        });
+    }
+};
+

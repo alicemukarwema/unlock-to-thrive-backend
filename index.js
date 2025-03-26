@@ -11,41 +11,17 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// CORS Configuration - Allow frontend access
-const allowedOrigins = ["https://unlocktothrive.netlify.app"];
-
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  credentials: true, // Allow cookies & authorization headers
-  methods: "GET,POST,PUT,DELETE", // Allowed HTTP methods
-  allowedHeaders: "Content-Type,Authorization", // Allowed headers
-}));
-
 // Middleware
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  credentials: true
+}));
 app.use(express.json());
 
-// Connect to MongoDB (MongoDB Atlas for cloud DB)
-const mongoURI = process.env.MONGODB_URI ||"mongodb+srv://munyeshuri:Munyeshuri1@cluster0.uisjoiq.mongodb.net/unlock?retryWrites=true&w=majority";
-
-mongoose.connect(mongoURI)
-  .then(() => {
-    console.log("Connected to MongoDB");
-    // Start the server after MongoDB connection is established
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
-  })
-  .catch(err => {
-    console.error("MongoDB connection error:", err.message);
-    // Optionally exit the process if DB connection fails
-    process.exit(1);
-  });
+// Connect to MongoDB
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/mentorship')
+  .then(() => console.log('Connected to MongoDB'))
+  .catch(err => console.error('MongoDB connection error:', err));
 
 // Routes
 app.use("/api", routes);
@@ -53,4 +29,8 @@ app.use("/api", routes);
 // Home route
 app.get("/", (req, res) => {
   res.send("Mentorship Platform API is running");
+});
+// Start server
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
