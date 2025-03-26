@@ -19,7 +19,7 @@ app.use(cors({
 app.use(express.json());
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI || 'mongodb+srv://amukarwema:amukarwema@cluster0.qto0s.mongodb.net/?retryWrites=true&w=majority&appName=unlock-to-thrive')
+mongoose.connect(process.env.MONGODB_URI || 'mongodb+srv://munyeshuri:Munyeshuri1@cluster0.uisjoiq.mongodb.net/unlock?retryWrites=true&w=majority')
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.error('MongoDB connection error:', err));
 
