@@ -52,4 +52,4 @@ const registerSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
-export default mongoose.model("register", registerSchema);
+export default mongoose.model("Register", registerSchema);

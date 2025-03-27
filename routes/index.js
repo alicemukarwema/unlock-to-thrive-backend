@@ -37,12 +37,12 @@ import {
 import {
   createOrUpdateProfile,
   getProfiles,
-  applyForProgram,
-  getProgramApplications,
+  applyForMentor,
   updateApplicationStatus,
   getEnrolledPrograms,
   submitFeedback,
   uploadResume,
+  getMentorApplications,
   getMentorStudents
 } from '../controllers/student.controller.js';
 
@@ -102,16 +102,18 @@ router.post('/students/resume', auth, upload.single('resume'), uploadResume);
 
 // Student Enrollment Routes
 router.route('/students/apply')
-  .post(auth, upload.single('resume'), applyForProgram);
+  .post(upload.single('resume'), applyForMentor);
 
 router.get('/students/enrollments', auth, getEnrolledPrograms);
 router.post('/students/feedback/:enrollmentId', auth, submitFeedback);
 
 // Mentor Routes
-router.get('/mentors/applications/:careerId', auth, getProgramApplications);
-router.put('/mentors/applications/:studentId/:careerId', auth, updateApplicationStatus);
+// router.get('/mentors/applications/:careerId', auth, getProgramApplications);
+// router.put('/mentors/applications/:studentId/:careerId', auth, updateApplicationStatus);
 router.get('/mentors/students', auth, getMentorStudents);
 router.get('/mentors', getAllMentors);
-
+router.get('/mentors/applications', getMentorApplications);
+router.put('/mentors/applications/:studentId', updateApplicationStatus);
+router.get('/mentors/applications/:id', getMentorApplications);
 
 export default router;

@@ -11,11 +11,6 @@ const studentSchema = new mongoose.Schema({
         ref: 'Career'
     }],
     enrollments: [{
-        careerId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Career',
-            required: true
-        },
         mentorId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Register',
@@ -32,6 +27,7 @@ const studentSchema = new mongoose.Schema({
         },
         approvedDate: Date,
         notes: String,
+        skills: String,
         feedback: {
             rating: {
                 type: Number,

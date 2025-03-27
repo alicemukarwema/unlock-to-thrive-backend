@@ -84,123 +84,57 @@ export const getProfiles = async (req, res) => {
     }
 };
 
-export const applyForProgram = async (req, res) => {
+export const applyForMentor = async (req, res) => {
     try {
-        // const userId = req.userId; 
-        const { userId ,careerId, motivation, skills } = req.body;
+        const { studentId, mentorId, motivation, skills } = req.body;
         
-        console.log("hhhhhhhhhhhhiiiiiiii",careerId, motivation, skills)
-        // Fix 1: Improved careerId validation
-        if (!careerId) {
-            return res.status(400).json({ message: "Career ID is required" });
+        console.log("Applying for mentorship:", mentorId, motivation, skills);
+        
+        if (!mentorId) {
+            return res.status(400).json({ message: "Mentor ID is required" });
         }
         
-        if (!mongoose.Types.ObjectId.isValid(careerId)) {
-            return res.status(400).json({ message: "Invalid career ID format" });
-          }
-          let careerObjectId;
-          try {
-            // Convert to ObjectId
-            careerObjectId = new mongoose.Types.ObjectId(careerId);
-            
-            // Proceed with the rest of the logic (e.g., query the database)
-            
-          }  catch (error) {
-            console.error('Error processing career ID:', error);
-            return res.status(500).json({ message: "Error processing career ID" });
-          }
-        
-        // Check if career exists
-        const career = await Career.findById(careerObjectId);
-        if (!career) {
-            return res.status(404).json({ message: "Career program not found" });
+        if (!mongoose.Types.ObjectId.isValid(mentorId)) {
+            return res.status(400).json({ message: "Invalid mentor ID format" });
         }
         
-        // Find student profile or create if doesn't exist
-        let student = await Student.findOne({ userId });
+        let mentorObjectId;
+        try {
+            mentorObjectId = new mongoose.Types.ObjectId(mentorId);
+        } catch (error) {
+            console.error('Error processing mentor ID:', error);
+            return res.status(500).json({ message: "Error processing mentor ID" });
+        }
+        
+        const mentor = await Register.findById(mentorObjectId);
+        if (!mentor) {
+            return res.status(404).json({ message: "Mentor not found" });
+        }
+        
+        let student = await Student.findOne({ userId: studentId });
         if (!student) {
-            student = new Student({ userId });
+            student = new Student({ userId: studentId });
         }
         
-        // Fix 2: More robust check for existing applications
-        const alreadyApplied = student.enrollments.some(enrollment => {
-            return enrollment.careerId && enrollment.careerId.toString() === careerObjectId.toString();
-        });
+        const alreadyApplied = student.enrollments.some(enrollment => 
+            enrollment.mentorId && enrollment.mentorId.toString() === mentorObjectId.toString()
+        );
         
         if (alreadyApplied) {
-            return res.status(400).json({ message: "Already applied to this program" });
+            return res.status(400).json({ message: "Already applied to this mentor" });
         }
         
-        // Fix 3: Better mentor resolution logic
-        let mentorId;
-        if (career.instructorId) {
-            mentorId = career.instructorId;
-        } else if (career.instructor) {
-            try {
-                // Try to treat as ObjectId
-                mentorId = mongoose.Types.ObjectId(career.instructor);
-            } catch (error) {
-                // If not an ObjectId, it might be a string name or "TBD"
-                if (career.instructor !== "TBD") {
-                    // Try to find a mentor by name
-                    const mentor = await Register.findOne({ 
-                        fullName: { $regex: career.instructor, $options: 'i' },
-                        accountType: 'mentor'
-                    });
-                    
-                    if (mentor) {
-                        mentorId = mentor._id;
-                    } else {
-                        // If no mentor found, assign a default mentor or admin
-                        const anyMentor = await Register.findOne({ accountType: 'mentor' });
-                        if (anyMentor) {
-                            mentorId = anyMentor._id;
-                        } else {
-                            return res.status(404).json({ message: "No mentors available in the system" });
-                        }
-                    }
-                } else {
-                    // If TBD, assign any available mentor
-                    const anyMentor = await Register.findOne({ accountType: 'mentor' });
-                    if (anyMentor) {
-                        mentorId = anyMentor._id;
-                    } else {
-                        return res.status(404).json({ message: "No mentors available in the system" });
-                    }
-                }
-            }
-        } else {
-            // No instructor info at all, try to find any available mentor
-            const anyMentor = await Register.findOne({ accountType: 'mentor' });
-            if (anyMentor) {
-                mentorId = anyMentor._id;
-            } else {
-                return res.status(404).json({ message: "No mentors available in the system" });
-            }
-        }
-        
-        // Fix 4: Properly add enrollment with validated IDs
         student.enrollments.push({
-            careerId: careerObjectId,
-            mentorId: mentorId,
+            mentorId: mentorObjectId,
             notes: motivation || "",
+            skills: skills || "",
             status: 'pending',
             appliedDate: new Date()
         });
         
-        // Fix 5: Better career interests handling
-        const hasInterest = student.careerInterests.some(interest => 
-            interest && interest.toString() === careerObjectId.toString()
-        );
-        
-        if (!hasInterest) {
-            student.careerInterests.push(careerObjectId);
-        }
-        
-        // Handle resume upload if present
         if (req.file) {
             student.resume = {
-                url: req.file.path, // Assuming Cloudinary URL
+                url: req.file.path,
                 filename: req.file.filename,
                 uploadDate: new Date()
             };
@@ -210,132 +144,115 @@ export const applyForProgram = async (req, res) => {
         
         res.status(200).json({
             success: true,
-            message: "Successfully applied to the program",
+            message: "Successfully applied to the mentor",
             data: student.enrollments[student.enrollments.length - 1]
         });
     } catch (error) {
-        console.error("Error in applyForProgram:", error);
+        console.error("Error in applyForMentor:", error);
         res.status(500).json({
-            message: "Error applying for program",
+            message: "Error applying for mentor",
             error: error.message
         });
     }
 };
 
-// Get all applications for a specific program (for mentors)
-export const getProgramApplications = async (req, res) => {
+export const getMentorApplications = async (req, res) => {
     try {
-        const mentorId = req.userId; // From auth middleware
-        const { careerId } = req.params;
-        
-        if (!mongoose.Types.ObjectId.isValid(careerId)) {
-            return res.status(400).json({ message: "Invalid career ID" });
+        const mentorId = req.params.id; // Get mentorId from URL parameter
+
+        if (!mongoose.Types.ObjectId.isValid(mentorId)) {
+            return res.status(400).json({ message: "Invalid mentor ID" });
         }
         
-        // Find all students who applied to this program with this mentor
+        // Use the 'new' keyword when creating a new ObjectId
+        const mentorObjectId = new mongoose.Types.ObjectId(mentorId);
+
+        // Fetch the students who applied to this mentor
         const students = await Student.find({
             "enrollments": {
-                $elemMatch: {
-                    careerId: mongoose.Types.ObjectId(careerId),
-                    mentorId: mongoose.Types.ObjectId(mentorId)
-                }
+                $elemMatch: { mentorId: mentorObjectId } // Use the new ObjectId here
             }
         }).populate('userId', 'fullName email phone');
-        
+
         if (!students || students.length === 0) {
             return res.status(200).json({
                 success: true,
                 data: [],
-                message: "No applications found for this program"
+                message: "No applications found for this mentor"
             });
         }
         
-        // Extract relevant enrollment data
-        const applications = students.map(student => {
-            const enrollment = student.enrollments.find(
-                e => e.careerId && e.careerId.toString() === careerId && 
-                     e.mentorId && e.mentorId.toString() === mentorId
-            );
-            
-            if (!enrollment) return null;
-            
-            return {
-                enrollmentId: enrollment._id,
-                studentId: student._id,
-                student: student.userId,
-                status: enrollment.status,
-                appliedDate: enrollment.appliedDate,
-                approvedDate: enrollment.approvedDate,
-                notes: enrollment.notes
-            };
-        }).filter(app => app !== null);
-        
+        // Process the enrollment data
+        const applications = students.flatMap(student =>
+            student.enrollments
+                .filter(enrollment => enrollment.mentorId.toString() === mentorObjectId.toString())
+                .map(enrollment => ({
+                    enrollmentId: enrollment._id,
+                    studentId: student._id,
+                    student: student.userId,
+                    status: enrollment.status,
+                    appliedDate: enrollment.appliedDate,
+                    approvedDate: enrollment.approvedDate,
+                    notes: enrollment.notes
+                }))
+        );
+
         res.status(200).json({
             success: true,
             count: applications.length,
             data: applications
         });
     } catch (error) {
-        console.error("Error in getProgramApplications:", error);
+        console.error("Error in getMentorApplications:", error);
         res.status(500).json({
-            message: "Error fetching program applications",
+            message: "Error fetching mentor applications",
             error: error.message
         });
     }
 };
 
-// Update application status (approve/reject) - for mentors
+
 export const updateApplicationStatus = async (req, res) => {
     try {
-        const mentorId = req.userId; // From auth middleware
-        const { studentId, careerId } = req.params;
-        const { status, notes } = req.body;
-        
-        if (!['approved', 'rejected'].includes(status)) {
-            return res.status(400).json({ message: "Status must be 'approved' or 'rejected'" });
+        const { studentId } = req.params; // Get studentId from the URL parameters
+        const { status } = req.body; // Get status from the request body
+
+        // Check if the status is 'approved'
+        if (status !== 'approved') {
+            return res.status(400).json({ message: 'Invalid status. Only "approved" is allowed.' });
         }
-        
-        // Find the student
+
+        // Find the student and the corresponding application
         const student = await Student.findById(studentId);
+        
         if (!student) {
-            return res.status(404).json({ message: "Student not found" });
+            return res.status(404).json({ message: 'Student not found' });
         }
-        
-        // Find the enrollment
-        const enrollmentIndex = student.enrollments.findIndex(
-            e => e.careerId && e.careerId.toString() === careerId && 
-                 e.mentorId && e.mentorId.toString() === mentorId
-        );
-        
-        if (enrollmentIndex === -1) {
-            return res.status(404).json({ message: "Enrollment not found" });
+
+        const enrollment = student.enrollments.find(enrollment => enrollment.status === 'pending');
+        if (!enrollment) {
+            return res.status(404).json({ message: 'No pending application found' });
         }
-        
-        // Update the enrollment
-        student.enrollments[enrollmentIndex].status = status;
-        student.enrollments[enrollmentIndex].notes = notes || student.enrollments[enrollmentIndex].notes;
-        
-        if (status === 'approved') {
-            student.enrollments[enrollmentIndex].approvedDate = new Date();
-        }
-        
+
+        // Update the application status to 'approved'
+        enrollment.status = 'approved';
+        enrollment.approvedDate = new Date(); // Set the approved date to current date
+
         await student.save();
-        
-        res.status(200).json({
+
+        return res.status(200).json({
             success: true,
-            message: `Application ${status}`,
-            data: student.enrollments[enrollmentIndex]
+            message: 'Application approved successfully',
+            data: enrollment
         });
     } catch (error) {
-        console.error("Error in updateApplicationStatus:", error);
-        res.status(500).json({
-            message: "Error updating application status",
+        console.error('Error updating application status:', error);
+        return res.status(500).json({
+            message: 'Error updating application status',
             error: error.message
         });
     }
 };
-
-// Get enrolled programs for a student
 export const getEnrolledPrograms = async (req, res) => {
     try {
         const userId = req.userId; // From auth middleware
