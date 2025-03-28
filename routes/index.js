@@ -96,7 +96,7 @@ router.delete('/careers/:careerId/resources/:resourceId', auth, deleteCareerReso
 // Student Profile Routes
 router.route('/students/profile')
   .post(auth, createOrUpdateProfile)
-  .get(auth, getProfile);
+  .get(getProfile);
 
 router.post('/students/resume', auth, upload.single('resume'), uploadResume);
 
