@@ -5,7 +5,7 @@ import User from "../models/register.js";
 
 dotenv.config(); // Load environment variables
 
-const SECRET_KEY = process.env.JWT_SECRET || "teckcode"; // Fallback default key
+const SECRET_KEY ="teckcode"; // Fallback default key
 
 const auth = async (req, res, next) => {
     try {
